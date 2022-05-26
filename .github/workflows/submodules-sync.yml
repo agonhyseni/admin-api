@@ -37,8 +37,7 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            console.log(context);
-            const branchName = 'submodule-update-' + context.payload.inputs.commit.substring(0,10);
+            const branchName = 'submodule-update-'; 
             core.setOutput('BRANCH_NAME', branchName);
 
       - name: Create new branch and push changes
