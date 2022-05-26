@@ -1,0 +1,3 @@
+[submodule "shared-ts"]
+	path = shared-ts
+	url = git@github.com:agonhyseni/shared-ts.git
