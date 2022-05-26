@@ -34,7 +34,11 @@ jobs:
 
       - name: Create branch name
         id: branch-name-step
-        run: echo '::set-output name=BRANCH_NAME::${${{ github.event.inputs.commit }}:0:10}'
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const branchName = 'submodule-update-' + github.event.inputs.commit.substring(0,10);
+            core.setOutput('BRANCH_NAME', branchName);
 
       - name: Create new branch and push changes
         shell: bash
