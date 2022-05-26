@@ -32,13 +32,17 @@ jobs:
           git pull --recurse-submodules
           git submodule update --remote --recursive
 
+      - name: Create branch name
+        id: branch-name-step
+        run: echo '::set-output name=BRANCH_NAME::${{ github.event.inputs.commit:0:10 }}'
+
       - name: Create new branch and push changes
         shell: bash
         run: |
           git config --global user.name 'Submodule update bot'
           git config --global user.email 'bot@noreply.github.com'
-          git checkout -b ${{ github.event.inputs.commit }}
-          git commit -am "Auto updated submodule references ${{ github.event.inputs.commit }}" && git push --set-upstream origin ${{ github.event.inputs.commit }}  || echo "No changes to commit"
+          git checkout -b ${{ steps.branch-name-step.outputs.BRANCH_NAME }}
+          git commit -am "Auto updated submodule references ${{ steps.branch-name-step.outputs.BRANCH_NAME }}" && git push --set-upstream origin ${{ steps.branch-name-step.outputs.BRANCH_NAME }}  || echo "No changes to commit"
 
       - name: Create pull request against target branch
         uses: actions/github-script@v5
@@ -49,7 +53,7 @@ jobs:
             await github.rest.pulls.create({
               owner,
               repo,
-              head: '${{ github.ref_name }}',
+              head: '${{ steps.branch-name-step.outputs.BRANCH_NAME }}',
               base: 'main',
               title: `[Auto-generated] Submodule Updates`,
               body: `[Auto-generated] Submodule Updates`,
