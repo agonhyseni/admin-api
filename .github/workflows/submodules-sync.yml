@@ -39,8 +39,7 @@ jobs:
           git config --global user.name 'Submodule update bot'
           git config --global user.email 'bot@noreply.github.com'
           git checkout -b ${{ env.NEW_BRANCH }}
-          git commit -am "Auto updated submodule references"
-          git push --set-upstream origin ${{ env.NEW_BRANCH }}  || echo '::set-output name=has_changes::false'
+          git commit -am "Auto updated submodule references" && git push --set-upstream origin ${{ env.NEW_BRANCH }}  || echo '::set-output name=has_changes::false'
 
       # Closing the previous pull request which has the same branch name before opening the new one
       - name: Close previous pull request if exists
