@@ -39,10 +39,10 @@ jobs:
           git config --global user.name 'Submodule update bot'
           git config --global user.email 'bot@noreply.github.com'
           git checkout -b ${{ env.NEW_BRANCH }}
-          git commit -am "Auto updated submodule references" && git push --set-upstream origin ${{ env.NEW_BRANCH }}  || echo '::set-output name=has_changes::false'
+          git commit -am "Auto updated submodule references" && git push -f --set-upstream origin ${{ env.NEW_BRANCH }}  || echo '::set-output name=has_changes::false'
 
-      # Closing the previous pull request which has the same branch name before opening the new one
-      - name: Close previous pull request if exists
+      # Creating a new pull request if it doesn't exist
+      - name: Create pull request against target branch
         if: steps.create-branch-push-changes.outputs.has_changes != 'false'
         uses: actions/github-script@v5
         with:
@@ -54,34 +54,13 @@ jobs:
               repo,
               head: '${{ env.NEW_BRANCH }}',
             });
-            if(data && data.length === 1){
-              await github.rest.pulls.createReviewComment({
+            if(data && data.length === 0){
+              await github.rest.pulls.create({
                 owner,
                 repo,
-                pull_number: data[0].number,
-                body: 'Closing this PR to open another one with a newer commit hash!',
-              });
-              await github.rest.pulls.update({
-                owner,
-                repo,
-                pull_number: data[0].number,
-                state: 'closed',
+                head: '${{ env.NEW_BRANCH }}',
+                base: '${{ env.BASE_BRANCH }}',
+                title: `[Auto-generated] Submodule Updates`,
+                body: `Auto-generated to update submodules.`,
               });
             }
-
-      # Creating a new pull request
-      - name: Create pull request against target branch
-        if: steps.create-branch-push-changes.outputs.has_changes != 'false'
-        uses: actions/github-script@v5
-        with:
-          github-token: ${{ secrets.CI_TOKEN }}
-          script: |
-            const { repo, owner } = context.repo;
-            await github.rest.pulls.create({
-              owner,
-              repo,
-              head: '${{ env.NEW_BRANCH }}',
-              base: '${{ env.BASE_BRANCH }}',
-              title: `[Auto-generated] Submodule Updates`,
-              body: `Auto-generated to update submodules.`,
-            });
