@@ -43,7 +43,7 @@ jobs:
 
       # Closing the previous pull request which has the same branch name before opening the new one
       - name: Close previous pull request if exists
-        if: ${{ env.HAS_CHANGES === 'true' }}
+        if: ${{ env.HAS_CHANGES == 'true' }}
         uses: actions/github-script@v5
         with:
           github-token: ${{ secrets.CI_TOKEN }}
@@ -72,7 +72,7 @@ jobs:
 
       # Creating a new pull request
       - name: Create pull request against target branch
-        if: ${{ env.HAS_CHANGES === 'true' }}
+        if: ${{ env.HAS_CHANGES == 'true' }}
         uses: actions/github-script@v5
         with:
           github-token: ${{ secrets.CI_TOKEN }}
