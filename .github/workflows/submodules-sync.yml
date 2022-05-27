@@ -33,17 +33,18 @@ jobs:
 
       # Creating a new branch where we try to push changes if there are any
       - name: Create new branch and push changes
+        id: create-branch-push-changes
         shell: bash
         run: |
           git config --global user.name 'Submodule update bot'
           git config --global user.email 'bot@noreply.github.com'
           git checkout -b ${{ env.NEW_BRANCH }}
-          echo "::set-env name=HAS_CHANGES::true"
-          git commit -am "Auto updated submodule references ${{ env.NEW_BRANCH }}" && git push --set-upstream origin ${{ env.NEW_BRANCH }}  || echo "::set-env name=HAS_CHANGES::false"
+          git commit -am "Auto updated submodule references"
+          git push --set-upstream origin ${{ env.NEW_BRANCH }}  || echo '::set-output name=has_changes::false'
 
       # Closing the previous pull request which has the same branch name before opening the new one
       - name: Close previous pull request if exists
-        if: ${{ env.HAS_CHANGES == 'true' }}
+        if: steps.create-branch-push-changes.outputs.has_changes != 'false'
         uses: actions/github-script@v5
         with:
           github-token: ${{ secrets.CI_TOKEN }}
@@ -54,7 +55,6 @@ jobs:
               repo,
               head: '${{ env.NEW_BRANCH }}',
             });
-            console.log(data);
             if(data && data.length === 1){
               await github.rest.pulls.createReviewComment({
                 owner,
@@ -72,7 +72,7 @@ jobs:
 
       # Creating a new pull request
       - name: Create pull request against target branch
-        if: ${{ env.HAS_CHANGES == 'true' }}
+        if: steps.create-branch-push-changes.outputs.has_changes != 'false'
         uses: actions/github-script@v5
         with:
           github-token: ${{ secrets.CI_TOKEN }}
