@@ -3,15 +3,14 @@ name: "Submodules Sync"
 on:
   # Allows you to run this workflow manually from the Actions tab or through HTTP API
   workflow_dispatch:
-    inputs:
-      commit:
-        description: "Commit hash"
-        required: true
 
 jobs:
   sync:
     name: "Submodules Sync"
     runs-on: ubuntu-latest
+    env:
+      NEW_BRANCH: "submodule-update"
+      BASE_BRANCH: "main"
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
@@ -32,22 +31,38 @@ jobs:
           git pull --recurse-submodules
           git submodule update --remote --recursive
 
-      - name: Create branch name
-        id: branch-name-step
-        uses: actions/github-script@v5
-        with:
-          script: |
-            const branchName = 'submodule-update-'; 
-            core.setOutput('BRANCH_NAME', branchName);
-
+      # Creating a new branch where we try to push changes if there are any
       - name: Create new branch and push changes
         shell: bash
         run: |
           git config --global user.name 'Submodule update bot'
           git config --global user.email 'bot@noreply.github.com'
-          git checkout -b ${{ steps.branch-name-step.outputs.BRANCH_NAME }}
-          git commit -am "Auto updated submodule references ${{ steps.branch-name-step.outputs.BRANCH_NAME }}" && git push --set-upstream origin ${{ steps.branch-name-step.outputs.BRANCH_NAME }}  || echo "No changes to commit"
+          git checkout -b ${{ env.NEW_BRANCH }}
+          git commit -am "Auto updated submodule references ${{ env.NEW_BRANCH }}" && git push --set-upstream origin ${{ env.NEW_BRANCH }}  || echo "No changes to commit"
 
+      # Closing the previous pull request which has the same branch name before opening the new one
+      - name: Close previous pull request if exists
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.CI_TOKEN }}
+          script: |
+            const { repo, owner } = context.repo;
+            const prs = await github.rest.pulls.list({
+              owner,
+              repo,
+              head: '${{ env.NEW_BRANCH }}',
+            });
+            console.log(prs);
+            if(prs && prs.length === 1){
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: prs[0].id,
+                state: 'closed',
+              });
+            }
+
+      # Creating a new pull request
       - name: Create pull request against target branch
         uses: actions/github-script@v5
         with:
@@ -57,8 +72,8 @@ jobs:
             await github.rest.pulls.create({
               owner,
               repo,
-              head: '${{ steps.branch-name-step.outputs.BRANCH_NAME }}',
-              base: 'main',
+              head: '${{ env.NEW_BRANCH }}',
+              base: '${{ env.BASE_BRANCH }}',
               title: `[Auto-generated] Submodule Updates`,
               body: `[Auto-generated] Submodule Updates`,
             });
