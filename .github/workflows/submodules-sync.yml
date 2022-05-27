@@ -54,6 +54,12 @@ jobs:
             });
             console.log(data);
             if(data && data.length === 1){
+              await github.rest.pulls.createReviewComment({
+                owner,
+                repo,
+                pull_number: data[0].number,
+                body: 'Closing this PR to open another one with a newer commit hash!',
+              });
               await github.rest.pulls.update({
                 owner,
                 repo,
@@ -75,5 +81,5 @@ jobs:
               head: '${{ env.NEW_BRANCH }}',
               base: '${{ env.BASE_BRANCH }}',
               title: `[Auto-generated] Submodule Updates`,
-              body: `[Auto-generated] Submodule Updates`,
+              body: `Auto-generated to update submodules.`,
             });
