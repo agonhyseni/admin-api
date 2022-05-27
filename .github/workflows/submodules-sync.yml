@@ -22,7 +22,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          token: ${{ secrets.CI_TOKEN }}
+          token: ${{ secrets.TOKEN }}
           submodules: true
 
       # Update references
@@ -46,7 +46,7 @@ jobs:
         if: steps.create-branch-push-changes.outputs.has_changes != 'false'
         uses: actions/github-script@v5
         with:
-          github-token: ${{ secrets.CI_TOKEN }}
+          github-token: ${{ secrets.TOKEN }}
           script: |
             const { repo, owner } = context.repo;
             const { data } = await github.rest.pulls.list({
