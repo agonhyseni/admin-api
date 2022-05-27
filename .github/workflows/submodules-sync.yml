@@ -47,17 +47,17 @@ jobs:
           github-token: ${{ secrets.CI_TOKEN }}
           script: |
             const { repo, owner } = context.repo;
-            const prs = await github.rest.pulls.list({
+            const { data } = await github.rest.pulls.list({
               owner,
               repo,
               head: '${{ env.NEW_BRANCH }}',
             });
-            console.log(prs);
-            if(prs && prs.length === 1){
+            console.log(data);
+            if(data && data.length === 1){
               await github.rest.pulls.update({
                 owner,
                 repo,
-                pull_number: prs[0].id,
+                pull_number: data[0].id,
                 state: 'closed',
               });
             }
