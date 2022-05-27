@@ -57,7 +57,7 @@ jobs:
               await github.rest.pulls.update({
                 owner,
                 repo,
-                pull_number: data[0].id,
+                pull_number: data[0].number,
                 state: 'closed',
               });
             }
