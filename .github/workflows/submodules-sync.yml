@@ -61,6 +61,5 @@ jobs:
                 head: '${{ env.NEW_BRANCH }}',
                 base: '${{ env.BASE_BRANCH }}',
                 title: `[Auto-generated] Submodule Updates`,
-                body: `Auto-generated to update submodules.`,
               });
             }
